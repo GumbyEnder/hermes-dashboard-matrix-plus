@@ -2,8 +2,6 @@
 
 Hermes Dashboard Matrix Plus is a public, cleaned-up working snapshot of a heavily extended Hermes Web UI deployment. It keeps the original Python server and Hermes-agent integration, while adding a richer React dashboard with live ops data, theme-specific media, editable notes and markdown views, workspace browsing, and a more production-oriented operator experience.
 
-This repository is intended as a publishable project snapshot with the working Matrix Plus redesign source and theme media assets included.
-
 ## Project Status
 
 This repo reflects an in-progress but working dashboard build with these major areas wired to real backend data:
