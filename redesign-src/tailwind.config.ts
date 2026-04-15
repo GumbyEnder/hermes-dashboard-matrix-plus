@@ -1,0 +1,67 @@
+import type { Config } from "tailwindcss";
+
+export default {
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: { "2xl": "1400px" },
+    },
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"],
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--bg))",
+        foreground: "hsl(var(--text))",
+        primary: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--primary-foreground))" },
+        secondary: { DEFAULT: "hsl(var(--panel))", foreground: "hsl(var(--text))" },
+        destructive: { DEFAULT: "hsl(var(--danger))", foreground: "hsl(var(--primary-foreground))" },
+        muted: { DEFAULT: "hsl(var(--panel))", foreground: "hsl(var(--muted))" },
+        accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--primary-foreground))" },
+        popover: { DEFAULT: "hsl(var(--bg-elev))", foreground: "hsl(var(--text))" },
+        card: { DEFAULT: "hsl(var(--bg-elev))", foreground: "hsl(var(--text))" },
+        success: "hsl(var(--success))",
+        warn: "hsl(var(--warn))",
+        danger: "hsl(var(--danger))",
+        info: "hsl(var(--info))",
+        "hermes-accent": "hsl(var(--accent))",
+        "hermes-accent-2": "hsl(var(--accent-2))",
+        "hermes-muted": "hsl(var(--muted))",
+        "hermes-panel": "hsl(var(--panel))",
+        "hermes-elev": "hsl(var(--bg-elev))",
+        "hermes-border": "hsl(var(--border))",
+        "hermes-code": "hsl(var(--code-bg))",
+        "row-hover": "hsl(var(--row-hover))",
+        "row-selected": "hsl(var(--row-selected))",
+        "badge-live": "hsl(var(--badge-live))",
+        "badge-idle": "hsl(var(--badge-idle))",
+        "badge-warn": "hsl(var(--badge-warn))",
+        "badge-error": "hsl(var(--badge-error))",
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        "pulse-glow": { "0%, 100%": { opacity: "1" }, "50%": { opacity: "0.5" } },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;

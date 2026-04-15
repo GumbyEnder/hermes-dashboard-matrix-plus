@@ -1,0 +1,22 @@
+services:
+  hermes-webui:
+    image: ghcr.io/nesquena/hermes-webui:latest
+    restart: unless-stopped
+    ports:
+      - '0.0.0.0:8787:8787'
+    volumes:
+      - /home/gumbyender/.hermes:/home/hermeswebui/.hermes:ro
+      - /home/gumbyender/workspace:/workspace
+      - /home/gumbyender/hermes-agent:/agent
+      - /mnt/nas/Obsidian Vault:/obsidian:ro
+      - /mnt/nas/agents/Projects:/projects:ro
+      - /home/gumbyender/hermes-ui-state:/home/hermeswebui/.hermes/webui-mvp
+    environment:
+      - WANTED_UID=1000
+      - WANTED_GID=1000
+      - HERMES_WEBUI_AGENT_DIR=/agent
+      - HERMES_WEBUI_STATE_DIR=/home/hermeswebui/.hermes/webui-mvp
+      - HERMES_WEBUI_DEFAULT_WORKSPACE=/projects
+      - HERMES_WEBUI_PASSWORD=hermes123
+volumes:
+  hermes-state:
