@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { CalendarCheck, Plus, Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LeftPanel } from "@/components/LeftPanel";
-import { apiGet, apiPost, formatAge } from "@/lib/dashboard-api";
+import { apiGet, apiPost, formatAge, usePollingQuery } from "@/lib/dashboard-api";
 
 type Job = {
   id?: string;
@@ -52,16 +52,14 @@ function jobLabel(job: Job) {
 }
 
 export function TasksSection({ selectedTaskId, onTaskSelect }: { selectedTaskId: string | null; onTaskSelect: (id: string | null) => void }) {
-  const [jobs, setJobs] = useState<Job[]>([]);
-
-  useEffect(() => {
-    apiGet<{ jobs: Job[] }>("/api/crons")
-      .then((data) => setJobs(data.jobs || []))
-      .catch(() => setJobs([]));
-  }, []);
+  const { data, refresh, setData } = usePollingQuery(
+    () => apiGet<{ jobs: Job[] }>("/api/crons", { quiet: true }),
+    { initialData: { jobs: [] }, intervalMs: 30000, quiet: true },
+  );
+  const jobs = useMemo(() => data.jobs || [], [data.jobs]);
 
   return (
-    <LeftPanel title="Scheduled Tasks" onRefresh={() => window.location.reload()} actions={
+    <LeftPanel title="Scheduled Tasks" onRefresh={() => void refresh()} actions={
       <button className="p-1 rounded hover:bg-row-hover text-hermes-muted hover:text-foreground transition-colors">
         <Plus size={14} />
       </button>
@@ -84,8 +82,8 @@ export function TasksSection({ selectedTaskId, onTaskSelect }: { selectedTaskId:
                 e.stopPropagation();
                 try {
                   await apiPost(job.enabled === false ? "/api/crons/resume" : "/api/crons/pause", { job_id: job.id, id: job.id });
-                  const data = await apiGet<{ jobs: Job[] }>("/api/crons");
-                  setJobs(data.jobs || []);
+                  const latest = await refresh();
+                  if (latest) setData(latest);
                 } catch {}
               }}
               className="p-1 text-hermes-muted hover:text-foreground"
@@ -100,13 +98,11 @@ export function TasksSection({ selectedTaskId, onTaskSelect }: { selectedTaskId:
 }
 
 export function TasksMain({ selectedTaskId }: { selectedTaskId: string | null }) {
-  const [jobs, setJobs] = useState<Job[]>([]);
-
-  useEffect(() => {
-    apiGet<{ jobs: Job[] }>("/api/crons")
-      .then((data) => setJobs(data.jobs || []))
-      .catch(() => setJobs([]));
-  }, []);
+  const { data } = usePollingQuery(
+    () => apiGet<{ jobs: Job[] }>("/api/crons", { quiet: true }),
+    { initialData: { jobs: [] }, intervalMs: 30000, quiet: true },
+  );
+  const jobs = data.jobs || [];
 
   const grouped = {
     todo: jobs.filter((job) => job.enabled === false),

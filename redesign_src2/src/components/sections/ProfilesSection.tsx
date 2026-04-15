@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LeftPanel } from "@/components/LeftPanel";
-import { User, Plus, Copy, Edit } from "lucide-react";
+import { User, Plus, Copy, Edit, CheckCircle2, CircleDot } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiGet, apiPost } from "@/lib/dashboard-api";
+import { apiGet, apiPost, usePollingQuery } from "@/lib/dashboard-api";
 import { TextPreviewDialog } from "@/components/TextPreviewDialog";
 
 export interface Profile {
@@ -37,20 +37,18 @@ export function ProfilesSection() {
 }
 
 export function ProfilesSectionWithState({ selected, onSelect }: { selected: string | null; onSelect: (name: string) => void }) {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const { data, refresh } = usePollingQuery(
+    () => apiGet<ProfilesPayload>("/api/profiles", { quiet: true }),
+    { initialData: { profiles: [], active: undefined }, intervalMs: 30000, quiet: true },
+  );
+  const profiles = useMemo(() => data.profiles || [], [data.profiles]);
 
   useEffect(() => {
-    apiGet<ProfilesPayload>("/api/profiles")
-      .then((data) => {
-        const list = data.profiles || [];
-        setProfiles(list);
-        if (!selected && list.length) onSelect(list.find((p) => p.is_active)?.name || list[0].name);
-      })
-      .catch(() => setProfiles([]));
-  }, []);
+    if (!selected && profiles.length) onSelect(profiles.find((p) => p.is_active)?.name || profiles[0].name);
+  }, [profiles, selected, onSelect]);
 
   return (
-    <LeftPanel title="Profiles" onRefresh={() => window.location.reload()} actions={
+    <LeftPanel title="Profiles" onRefresh={() => void refresh()} actions={
       <button className="p-1 rounded hover:bg-row-hover text-hermes-muted hover:text-foreground transition-colors">
         <Plus size={14} />
       </button>
@@ -68,7 +66,11 @@ export function ProfilesSectionWithState({ selected, onSelect }: { selected: str
           >
             <User size={14} className={selected === profile.name ? "text-hermes-accent" : "text-hermes-muted"} />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium">{profile.name}</div>
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span>{profile.name}</span>
+                {profile.is_active && <CircleDot size={10} className="text-success" />}
+                {profile.is_default && <CheckCircle2 size={10} className="text-hermes-accent" />}
+              </div>
               <div className="text-[10px] text-hermes-muted font-mono">{profile.model || "unknown model"}</div>
             </div>
             <div className="hidden group-hover:flex items-center gap-0.5">
@@ -83,15 +85,13 @@ export function ProfilesSectionWithState({ selected, onSelect }: { selected: str
 }
 
 export function ProfilesMain({ selectedId }: { selectedId: string | null }) {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const { data } = usePollingQuery(
+    () => apiGet<ProfilesPayload>("/api/profiles", { quiet: true }),
+    { initialData: { profiles: [], active: undefined }, intervalMs: 30000, quiet: true },
+  );
   const [content, setContent] = useState<ProfileContent | null>(null);
   const [soulEditorOpen, setSoulEditorOpen] = useState(false);
-
-  useEffect(() => {
-    apiGet<ProfilesPayload>("/api/profiles")
-      .then((data) => setProfiles(data.profiles || []))
-      .catch(() => setProfiles([]));
-  }, []);
+  const profiles = data.profiles || [];
 
   const profile = profiles.find((p) => p.name === selectedId) || profiles.find((p) => p.is_active) || profiles[0] || null;
 

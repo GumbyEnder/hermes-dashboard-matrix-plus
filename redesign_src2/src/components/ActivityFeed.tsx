@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
 import { Activity, FolderOpen, MessageSquare, Wrench } from "lucide-react";
-import { apiGet, formatAge } from "@/lib/dashboard-api";
+import { apiGet, formatAge, usePollingQuery } from "@/lib/dashboard-api";
 
 type FeedEvent = {
   ts?: number;
@@ -29,27 +28,11 @@ function detailFor(event: FeedEvent) {
 }
 
 export function ActivityFeed() {
-  const [events, setEvents] = useState<FeedEvent[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    const load = () => {
-      apiGet<{ events: FeedEvent[] }>("/api/ops/ledger")
-        .then((data) => {
-          if (mounted) setEvents((data.events || []).slice(0, 20));
-        })
-        .catch(() => {
-          if (mounted) setEvents([]);
-        });
-    };
-
-    load();
-    const id = setInterval(load, 15000);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, []);
+  const { data } = usePollingQuery(
+    () => apiGet<{ events: FeedEvent[] }>("/api/ops/ledger", { quiet: true }),
+    { initialData: { events: [] }, intervalMs: 15000, quiet: true },
+  );
+  const events = (data.events || []).slice(0, 20);
 
   return (
     <div className="flex flex-col h-full">

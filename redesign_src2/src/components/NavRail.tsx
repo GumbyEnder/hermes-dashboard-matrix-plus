@@ -8,6 +8,7 @@ import {
   BarChart3,
   Briefcase,
   BookMarked,
+  ShieldCheck,
   User,
   ListChecks,
   Settings,
@@ -18,7 +19,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 export type NavSection =
   | "chat" | "tasks" | "skills" | "memory"
-  | "notes" | "best-practices" | "spaces" | "reports" | "projects" | "profiles" | "todos" | "ascii";
+  | "notes" | "best-practices" | "spaces" | "reports" | "projects" | "profiles" | "todos" | "ascii"
+  | "agents" | "maintenance";
 
 const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType; shortcut?: string }[] = [
   { id: "chat", label: "Chat", icon: MessageSquare, shortcut: "Ctrl+1" },
@@ -30,8 +32,10 @@ const NAV_ITEMS: { id: NavSection; label: string; icon: React.ElementType; short
   { id: "best-practices", label: "Best Practices", icon: BookMarked },
   { id: "spaces", label: "Spaces", icon: Folder, shortcut: "Ctrl+6" },
   { id: "reports", label: "Reports", icon: BarChart3, shortcut: "Ctrl+7" },
-  { id: "profiles", label: "Profiles", icon: User, shortcut: "Ctrl+8" },
-  { id: "todos", label: "Todos", icon: ListChecks, shortcut: "Ctrl+9" },
+  { id: "agents", label: "Agents", icon: User, shortcut: "Ctrl+8" },
+  { id: "profiles", label: "Profiles", icon: User, shortcut: "Ctrl+9" },
+  { id: "maintenance", label: "Maintenance", icon: ShieldCheck },
+  { id: "todos", label: "Todos", icon: ListChecks },
 ];
 
 interface NavRailProps {

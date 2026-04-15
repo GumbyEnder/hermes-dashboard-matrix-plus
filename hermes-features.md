@@ -1,55 +1,90 @@
-# Hermes Dashboard Matrix Plus Features
+# Hermes Dashboard Matrix Plus
+# Current Feature Set
 
-This document summarizes the major user-facing features present in this public snapshot.
+Generated: 2026-04-15
 
 ## Core Dashboard
 
-- Three-panel dashboard layout
-- Theme-aware header with operator status area
-- React/Vite redesign layered on top of the Hermes Web UI backend
-- Matrix and Amber visual skins with dedicated media treatments
+- Theme-aware operator dashboard with distinct Matrix and Amber header media
+- Real Hermes-backed chat using start/stream endpoints instead of placeholder replies
+- Live CPU, memory, disk, and network metrics in the header
+- Shared alert center fed from real ops ledger events
+- Centralized frontend API/error handling and shared polling behavior
 
-## Chat
+## Agents
 
-- Hermes-backed chat sessions
-- Streaming response flow
-- Larger prompt composer for longer requests
-- Session-aware workspace context
+- Profile list sourced from Hermes profiles
+- Create, clone, switch active, and delete profile actions
+- Per-agent tabs for:
+  - Overview
+  - Sessions
+  - Config
+  - Cron
+  - Gateway
 
-## Ops And Monitoring
+## Sessions
 
-- Real CPU, memory, disk, and network metrics
-- Reports with `1H`, `24H`, `7D`, and `30D` windows
-- Usage and cost visualizations built from backend data
+- Per-agent session listing
+- Search sessions by title/model/project
+- Rename
+- Export
+- Pin / unpin
+- Archive / unarchive
+- Clear
+- Delete
 
-## Workspace And Files
+## Config And Files
 
-- Workspace browser backed by real filesystem data
-- Text-file preview dialogs
-- Markdown and text editing where a real file path exists
+- Editable `SOUL.md`
+- Editable `config.yaml`
+- Workspace file browsing with text preview dialogs
+- Reusable markdown/text viewer/editor for operator-facing files
 
-## Notes, Todos, And Memory
+## Skills
 
-- Editable Hermes-backed notes
-- Todo items derived from Hermes note/task content
-- Live memory views pulled from the backend
+- Real skills inventory
+- Category grouping
+- Enable / disable controls
+- Detail views for skill descriptions and markdown content
 
-## Skills And Profiles
+## Projects
 
-- Skills listed by category
-- Enable/disable actions for skills
-- Profile inspection for files such as `SOUL.md` and `config.yaml`
+- Project list from backend metadata
+- Recent briefs view with text preview
+- Recent ledger activity view
+- Persisted per-project Kanban board with:
+  - Todo
+  - In Progress
+  - Done
 
-## Themes And Media
+## Notes And Todos
 
-- Matrix theme video header
-- Amber theme video header
-- Backend asset aliasing for media-backed theme assets
+- Notes backed by Hermes state
+- Editable note content
+- Todos sourced from real stored data rather than placeholder cards
 
-## Publishing Notes
+## Operations
 
-This repository is a sanitized public export:
+- Gateway status
+- Gateway logs
+- Gateway start / stop / restart
+- Cron list / create / run / pause / resume / delete
+- Maintenance panel for update checks, update apply, and session cleanup
 
-- machine-local `.env` excluded
-- internal recovery notes excluded
-- live credentials excluded
+## Reports
+
+- Time windows:
+  - 1 hour
+  - 24 hours
+  - 7 days
+  - 30 days
+- Headline totals
+- Trend graphs
+- Real backend-driven reporting instead of fake summary data
+
+## Credits
+
+- Hermes Web UI / Hermes Agent by the Hermes ecosystem
+- `xaspx/hermes-control-interface` as a useful parity and ops reference
+- `NousResearch`
+- `Teknium`

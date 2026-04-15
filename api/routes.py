@@ -66,6 +66,7 @@ from api.dashboard_phase2 import (
     build_ops_ledger_payload,
     build_ops_briefs_payload,
 )
+from api.gateway_ops import get_gateway_status, get_gateway_logs, apply_gateway_action
 from api.upload import handle_upload
 from api.streaming import _sse, _run_agent_streaming, cancel_stream
 import psutil
@@ -481,6 +482,17 @@ def handle_get(handler, parsed) -> bool:
             'env_path': str(env_path),
         })
 
+    if parsed.path == '/api/gateway/status':
+        qs = parse_qs(parsed.query)
+        profile = qs.get('profile', [''])[0].strip() or 'default'
+        return j(handler, get_gateway_status(profile))
+
+    if parsed.path == '/api/gateway/logs':
+        qs = parse_qs(parsed.query)
+        profile = qs.get('profile', [''])[0].strip() or 'default'
+        lines = int(qs.get('lines', ['100'])[0] or 100)
+        return j(handler, get_gateway_logs(profile, lines=lines))
+
     # Ops endpoints
     if parsed.path == '/api/ops/resources':
         return j(handler, {
@@ -859,6 +871,14 @@ def handle_post(handler, parsed) -> bool:
         except RuntimeError as e:
             return bad(handler, str(e), 409)
 
+    if parsed.path == '/api/gateway/action':
+        profile = str(body.get('profile', '')).strip() or 'default'
+        action = str(body.get('action', '')).strip().lower()
+        result = apply_gateway_action(profile, action)
+        if result.get('ok'):
+            return j(handler, result)
+        return bad(handler, result.get('message') or 'Gateway action failed', 400)
+
     # ── Settings (POST) ──
     if parsed.path == '/api/settings':
         if 'bot_name' in body:
@@ -1006,6 +1026,31 @@ def handle_post(handler, parsed) -> bool:
             proj['color'] = color
         if 'path' in body:
             proj['path'] = str(body['path']).strip()
+        if 'kanban' in body:
+            kanban = body.get('kanban')
+            if not isinstance(kanban, dict):
+                return bad(handler, 'kanban must be an object')
+            normalized = {}
+            for column in ('todo', 'in_progress', 'done'):
+                raw_items = kanban.get(column) or []
+                if not isinstance(raw_items, list):
+                    return bad(handler, f'kanban.{column} must be a list')
+                items = []
+                for entry in raw_items:
+                    if not isinstance(entry, dict):
+                        continue
+                    card_id = str(entry.get('id') or uuid.uuid4().hex[:12]).strip()[:64]
+                    title = str(entry.get('title') or '').strip()[:200]
+                    if not title:
+                        continue
+                    items.append({
+                        'id': card_id,
+                        'title': title,
+                        'detail': str(entry.get('detail') or '').strip()[:2000],
+                        'updated_at': float(entry.get('updated_at') or time.time()),
+                    })
+                normalized[column] = items
+            proj['kanban'] = normalized
         save_projects(projects)
         return j(handler, {'ok': True, 'project': proj})
 

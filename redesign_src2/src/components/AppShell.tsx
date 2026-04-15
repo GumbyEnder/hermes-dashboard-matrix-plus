@@ -16,20 +16,25 @@ import { SpacesSection, SpacesMain } from "@/components/sections/SpacesSection";
 import { ReportsSection, ReportsMain } from "@/components/sections/ReportsSection";
 import { ProjectsSection, ProjectsMain } from "@/components/sections/ProjectsSection";
 import { ProfilesSectionWithState, ProfilesMain } from "@/components/sections/ProfilesSection";
+import { AgentsSection, AgentsMain } from "@/components/sections/AgentsSection";
 import { TodosSection, TodosMain } from "@/components/sections/TodosSection";
 import { NotesSection, NotesMain } from "@/components/sections/NotesSection";
 import { BestPracticesSection, BestPracticesMain } from "@/components/sections/BestPracticesSection";
 import { AsciiSidebar, AsciiMain } from "@/components/sections/AsciiSection";
+import { MaintenanceSection, MaintenanceMain } from "@/components/sections/MaintenanceSection";
 import { Toaster } from "@/components/ui/sonner";
 import { AnimatePresence, motion } from "framer-motion";
 
 const NAV_ORDER: NavSection[] = [
-  "chat", "projects", "tasks", "skills", "memory", "spaces", "reports", "profiles", "todos", "notes", "best-practices",
+  "chat", "projects", "tasks", "skills", "memory", "spaces", "reports", "agents", "profiles", "todos", "notes", "best-practices",
+  "maintenance",
 ];
 
 const SECTION_LABELS: Record<NavSection, string> = {
   chat: "Chat", tasks: "Tasks", skills: "Skills", memory: "Memory",
   spaces: "Spaces", reports: "Reports", projects: "Projects", profiles: "Profiles",
+  agents: "Agents",
+  maintenance: "Maintenance",
   todos: "Todos", notes: "Notes", "best-practices": "Best Practices", ascii: "ASCII Art",
 };
 
@@ -41,7 +46,9 @@ const SECTION_MAP: Record<NavSection, { left: React.ComponentType; main: React.C
   spaces: { left: SpacesSection, main: SpacesMain },
   reports: { left: ReportsSection, main: ReportsMain },
   projects: { left: ProjectsSection, main: ProjectsMain },
+  agents: { left: () => null, main: () => null },
   profiles: { left: () => null, main: () => null },
+  maintenance: { left: MaintenanceSection, main: MaintenanceMain },
   todos: { left: TodosSection, main: TodosMain },
   notes: { left: NotesSection, main: NotesMain },
   "best-practices": { left: BestPracticesSection, main: BestPracticesMain },
@@ -67,18 +74,22 @@ const [activeSection, setActiveSection] = useState<NavSection>("chat");
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { theme, changeTheme } = useTheme();
 
   const isProfiles = activeSection === "profiles";
+  const isAgents = activeSection === "agents";
   const { left: LeftComp, main: MainComp } = SECTION_MAP[activeSection];
 
   const breadcrumbs = useMemo(() => {
     const crumbs = ["Hermes", SECTION_LABELS[activeSection]];
     if (isProfiles && selectedProfileId) {
       crumbs.push(selectedProfileId);
+    } else if (isAgents && selectedAgentId) {
+      crumbs.push(selectedAgentId);
     }
     return crumbs;
-  }, [activeSection, isProfiles, selectedProfileId]);
+  }, [activeSection, isAgents, isProfiles, selectedAgentId, selectedProfileId]);
 
   // Responsive auto-collapse
   useEffect(() => {
@@ -124,6 +135,14 @@ const [activeSection, setActiveSection] = useState<NavSection>("chat");
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      window.location.assign("/login");
+    };
+    window.addEventListener("hermes:auth-expired", handleAuthExpired);
+    return () => window.removeEventListener("hermes:auth-expired", handleAuthExpired);
+  }, []);
+
   const handleLeftResize = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -150,7 +169,7 @@ const [activeSection, setActiveSection] = useState<NavSection>("chat");
 
       {/* Left panel */}
       <div className="shrink-0 h-full overflow-hidden transition-[width] duration-200" style={{ width: leftCollapsed ? 0 : leftWidth }}>
- {activeSection === "chat" ? <ChatSection activeSessionId={chatSessionId} onSessionSelect={setChatSessionId} /> : activeSection === "projects" ? <ProjectsSection selectedProjectId={selectedProjectId} onProjectSelect={setSelectedProjectId} /> : activeSection === "tasks" ? <TasksSection selectedTaskId={selectedTaskId} onTaskSelect={setSelectedTaskId} /> : activeSection === "skills" ? <SkillsSection selectedSkillName={selectedSkillName} onSkillSelect={setSelectedSkillName} /> : activeSection === "spaces" ? <SpacesSection selectedWorkspacePath={selectedWorkspacePath} onWorkspaceSelect={setSelectedWorkspacePath} /> : activeSection === "notes" ? <NotesSection selectedNoteId={selectedNoteId} onNoteSelect={setSelectedNoteId} /> : isProfiles ? <ProfilesSectionWithState selected={selectedProfileId} onSelect={setSelectedProfileId} /> : <LeftComp />} 
+ {activeSection === "chat" ? <ChatSection activeSessionId={chatSessionId} onSessionSelect={setChatSessionId} /> : activeSection === "projects" ? <ProjectsSection selectedProjectId={selectedProjectId} onProjectSelect={setSelectedProjectId} /> : activeSection === "tasks" ? <TasksSection selectedTaskId={selectedTaskId} onTaskSelect={setSelectedTaskId} /> : activeSection === "skills" ? <SkillsSection selectedSkillName={selectedSkillName} onSkillSelect={setSelectedSkillName} /> : activeSection === "spaces" ? <SpacesSection selectedWorkspacePath={selectedWorkspacePath} onWorkspaceSelect={setSelectedWorkspacePath} /> : activeSection === "notes" ? <NotesSection selectedNoteId={selectedNoteId} onNoteSelect={setSelectedNoteId} /> : isAgents ? <AgentsSection selectedAgent={selectedAgentId} onAgentSelect={setSelectedAgentId} /> : isProfiles ? <ProfilesSectionWithState selected={selectedProfileId} onSelect={setSelectedProfileId} /> : <LeftComp />} 
       </div>
 
       {/* Left divider */}
@@ -206,6 +225,8 @@ const [activeSection, setActiveSection] = useState<NavSection>("chat");
                 <SpacesMain selectedWorkspacePath={selectedWorkspacePath} onWorkspaceSelect={setSelectedWorkspacePath} />
               ) : activeSection === "notes" ? (
                 <NotesMain selectedNoteId={selectedNoteId} onNoteSelect={setSelectedNoteId} />
+              ) : isAgents ? (
+                <AgentsMain selectedAgent={selectedAgentId} onAgentSelect={setSelectedAgentId} />
               ) : isProfiles ? (
                 <ProfilesMain selectedId={selectedProfileId} />
               ) : (

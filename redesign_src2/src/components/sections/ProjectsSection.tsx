@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { Activity, Briefcase, FileText, MessageSquare } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, ArrowRight, Briefcase, CheckCircle2, ClipboardList, FileText, MessageSquare, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { LeftPanel } from "@/components/LeftPanel";
 import { apiGet, apiPost, formatAge, formatNumber } from "@/lib/dashboard-api";
 import { TextPreviewDialog } from "@/components/TextPreviewDialog";
+import { Button } from "@/components/ui/button";
 
 type Project = {
   project_id?: string;
@@ -14,6 +15,20 @@ type Project = {
   mtime?: number;
   brief?: string;
   access_instructions?: string;
+  kanban?: KanbanBoard;
+};
+
+type KanbanCard = {
+  id: string;
+  title: string;
+  detail?: string;
+  updated_at?: number;
+};
+
+type KanbanBoard = {
+  todo?: KanbanCard[];
+  in_progress?: KanbanCard[];
+  done?: KanbanCard[];
 };
 
 type LedgerEvent = {
@@ -79,6 +94,7 @@ export function ProjectsMain({ selectedProjectId }: { selectedProjectId: string 
   const [briefs, setBriefs] = useState<Brief[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [viewer, setViewer] = useState<{ title: string; subtitle?: string; content: string } | null>(null);
+  const [savingKanban, setSavingKanban] = useState(false);
 
   const openPreview = async (title: string, path: string | undefined, fallback: string) => {
     if (path && path.toLowerCase().endsWith(".md")) {
@@ -106,6 +122,77 @@ export function ProjectsMain({ selectedProjectId }: { selectedProjectId: string 
   const selectedProject = projects.find((project) =>
     (project.project_id || project.id || project.path || project.name) === selectedProjectId
   ) || null;
+
+  const kanban = useMemo(() => normalizeKanban(selectedProject?.kanban), [selectedProject?.kanban]);
+
+  const persistKanban = async (nextKanban: KanbanBoard) => {
+    if (!selectedProject?.project_id) return;
+    setSavingKanban(true);
+    try {
+      const data = await apiPost<{ project?: Project }>("/api/projects/update", {
+        project_id: selectedProject.project_id,
+        kanban: nextKanban,
+      });
+      setProjects((current) =>
+        current.map((project) =>
+          project.project_id === selectedProject.project_id
+            ? { ...project, kanban: normalizeKanban(data.project?.kanban || nextKanban) }
+            : project
+        )
+      );
+    } finally {
+      setSavingKanban(false);
+    }
+  };
+
+  const addKanbanCard = async (column: keyof Required<KanbanBoard>) => {
+    if (!selectedProject) return;
+    const title = window.prompt(`New ${labelForColumn(column)} item`, "");
+    if (!title || !title.trim()) return;
+    const detail = window.prompt("Optional detail", "") || "";
+    const nextKanban = {
+      ...kanban,
+      [column]: [
+        ...kanban[column],
+        {
+          id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          title: title.trim(),
+          detail: detail.trim(),
+          updated_at: Date.now() / 1000,
+        },
+      ],
+    };
+    await persistKanban(nextKanban);
+  };
+
+  const moveKanbanCard = async (column: keyof Required<KanbanBoard>, cardId: string, direction: -1 | 1) => {
+    const orderedColumns: Array<keyof Required<KanbanBoard>> = ["todo", "in_progress", "done"];
+    const currentIndex = orderedColumns.indexOf(column);
+    const nextColumn = orderedColumns[currentIndex + direction];
+    if (!nextColumn) return;
+    const card = kanban[column].find((entry) => entry.id === cardId);
+    if (!card) return;
+    const nextKanban = {
+      ...kanban,
+      [column]: kanban[column].filter((entry) => entry.id !== cardId),
+      [nextColumn]: [
+        ...kanban[nextColumn],
+        {
+          ...card,
+          updated_at: Date.now() / 1000,
+        },
+      ],
+    };
+    await persistKanban(nextKanban);
+  };
+
+  const removeKanbanCard = async (column: keyof Required<KanbanBoard>, cardId: string) => {
+    const nextKanban = {
+      ...kanban,
+      [column]: kanban[column].filter((entry) => entry.id !== cardId),
+    };
+    await persistKanban(nextKanban);
+  };
 
   const visibleLedger = selectedProject
     ? ledger.filter((event) => {
@@ -193,6 +280,82 @@ export function ProjectsMain({ selectedProjectId }: { selectedProjectId: string 
           {briefs.length === 0 && <div className="text-xs text-hermes-muted">No briefs found.</div>}
         </div>
       </div>
+      <div className="px-4 pb-4">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-hermes-muted uppercase tracking-wider">Project Kanban</h2>
+          <div className="text-[10px] text-hermes-muted">{savingKanban ? "Saving..." : selectedProject ? "Per-project board" : "Select a project"}</div>
+        </div>
+        {selectedProject ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            {KANBAN_COLUMNS.map((column) => (
+              <div key={column.key} className="rounded-lg border border-hermes-border bg-hermes-panel/80 p-3">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <column.icon size={14} className={column.iconClass} />
+                    <div>
+                      <div className="text-xs font-semibold">{column.label}</div>
+                      <div className="text-[10px] text-hermes-muted">{formatNumber(kanban[column.key].length)} cards</div>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-hermes-muted" onClick={() => void addKanbanCard(column.key)}>
+                    <Plus size={13} />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {kanban[column.key].map((card) => (
+                    <div key={card.id} className="rounded-md border border-hermes-border bg-black/20 p-3">
+                      <div className="text-xs font-medium">{card.title}</div>
+                      {card.detail ? <div className="mt-1 text-[11px] text-hermes-muted whitespace-pre-wrap">{card.detail}</div> : null}
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className="text-[10px] text-hermes-muted">{card.updated_at ? formatAge(card.updated_at) : "now"}</div>
+                        <div className="flex items-center gap-1">
+                          {column.key !== "todo" ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-hermes-muted"
+                              onClick={() => void moveKanbanCard(column.key, card.id, -1)}
+                            >
+                              <RotateCcw size={12} />
+                            </Button>
+                          ) : null}
+                          {column.key !== "done" ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2 text-hermes-muted"
+                              onClick={() => void moveKanbanCard(column.key, card.id, 1)}
+                            >
+                              <ArrowRight size={12} />
+                            </Button>
+                          ) : null}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-destructive"
+                            onClick={() => void removeKanbanCard(column.key, card.id)}
+                          >
+                            <Trash2 size={12} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {kanban[column.key].length === 0 ? (
+                    <div className="rounded-md border border-dashed border-hermes-border px-3 py-6 text-center text-xs text-hermes-muted">
+                      No cards in {column.label.toLowerCase()}.
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-hermes-border bg-hermes-panel/60 px-4 py-6 text-sm text-hermes-muted">
+            Select a project to view its Todo, In Progress, and Done board.
+          </div>
+        )}
+      </div>
       <TextPreviewDialog
         open={Boolean(viewer)}
         onOpenChange={(open) => { if (!open) setViewer(null); }}
@@ -207,4 +370,34 @@ export function ProjectsMain({ selectedProjectId }: { selectedProjectId: string 
       />
     </div>
   );
+}
+
+const KANBAN_COLUMNS: Array<{
+  key: keyof Required<KanbanBoard>;
+  label: string;
+  icon: typeof ClipboardList;
+  iconClass: string;
+}> = [
+  { key: "todo", label: "Todo", icon: ClipboardList, iconClass: "text-hermes-accent" },
+  { key: "in_progress", label: "In Progress", icon: Activity, iconClass: "text-warning" },
+  { key: "done", label: "Done", icon: CheckCircle2, iconClass: "text-success" },
+];
+
+function normalizeKanban(input?: KanbanBoard): Required<KanbanBoard> {
+  return {
+    todo: Array.isArray(input?.todo) ? input.todo : [],
+    in_progress: Array.isArray(input?.in_progress) ? input.in_progress : [],
+    done: Array.isArray(input?.done) ? input.done : [],
+  };
+}
+
+function labelForColumn(column: keyof Required<KanbanBoard>): string {
+  switch (column) {
+    case "todo":
+      return "Todo";
+    case "in_progress":
+      return "In Progress";
+    case "done":
+      return "Done";
+  }
 }

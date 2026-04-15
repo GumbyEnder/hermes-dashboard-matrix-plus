@@ -3,6 +3,7 @@ import { Cpu, MemoryStick, HardDrive, Wifi, Rocket, RefreshCw, Trash2, Play, Zap
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { apiGet } from "@/lib/dashboard-api";
 import type { ThemeId } from "@/lib/theme";
+import { AlertCenter } from "@/components/AlertCenter";
 
 type ResourceResponse = {
   cpu_percent?: number;
@@ -182,18 +183,23 @@ export function HermesHeader({ theme }: { theme: ThemeId }) {
 
   const h = historyRef.current;
 
+  const headerVideoSrc = theme === "amber"
+    ? "/assets/media/hermes-dash-amber.mp4"
+    : "/assets/media/hermes-dash-header-matrix.mp4";
+
   return (
     <header className="shrink-0 relative border-b-2 border-hermes-border backdrop-blur-md bg-hermes-elev/60 shadow-[0_4px_20px_hsl(var(--shadow)/0.4)]">
       {(theme === "matrix" || theme === "amber") && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <video
+            key={headerVideoSrc}
             autoPlay
             muted
             loop
             playsInline
             className="absolute inset-0 h-full w-full object-cover opacity-20"
           >
-            <source src={theme === "amber" ? "/assets/media/hermes-dash-amber.mp4" : "/assets/media/hermes-dash-header-matrix.mp4"} type="video/mp4" />
+            <source src={headerVideoSrc} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/15 to-black/45" />
         </div>
@@ -231,6 +237,7 @@ export function HermesHeader({ theme }: { theme: ThemeId }) {
         </div>
 
         <div className="flex items-center gap-4">
+          <AlertCenter />
           <LiveClock />
           <div className="flex items-center gap-3">
             <div className="text-right">

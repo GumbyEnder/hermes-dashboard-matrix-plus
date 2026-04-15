@@ -2,12 +2,7 @@
 
 Hermes Dashboard Matrix Plus is a public, cleaned-up working snapshot of a heavily extended Hermes Web UI deployment. It keeps the original Python server and Hermes-agent integration, while adding a richer React dashboard with live ops data, theme-specific media, editable notes and markdown views, workspace browsing, and a more production-oriented operator experience.
 
-This repository is intended as a publishable project snapshot:
-
-- no machine-local `.env` is included
-- no local runtime passwords are included
-- local recovery notes and internal handoff files are excluded
-- theme media assets that power the dashboard header are included
+This repository is intended as a publishable project snapshot with the working Matrix Plus redesign source and theme media assets included.
 
 ## Project Status
 
@@ -37,6 +32,34 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the project-to-date writeup.
 - Reports with `1H`, `24H`, `7D`, and `30D` windows
 - Profile browser for `SOUL.md`, `config.yaml`, and related profile files
 
+## Main Features
+
+- `Agents` surface with create, clone, switch-active, and delete flows
+- Per-agent tabs for `Overview`, `Sessions`, `Config`, `Cron`, and `Gateway`
+- Shared alert center backed by real ops ledger events
+- Maintenance tools for update checks, apply update, and session cleanup
+- Workspace explorer with text-file preview and editing
+- Skills inventory with enable/disable controls and detail views
+- Projects dashboard with briefs, ledger context, and a persisted Kanban board
+- Notes and Todos backed by Hermes state instead of placeholder UI data
+- Real reports windows and graphs for `1H`, `24H`, `7D`, and `30D`
+
+## Updates
+
+Latest build-session updates now in this repo:
+
+- replaced multiple placeholder sections with real backend-driven data
+- fixed theme-specific header media so Matrix and Amber each use their own video
+- added a shared frontend API layer with cleaner polling and auth-expired handling
+- added a real header alert center sourced from `/api/ops/ledger`
+- introduced a full `Agents` management surface with profile lifecycle actions
+- added per-agent session tools: rename, export, pin, archive, clear, and delete
+- added editable per-agent `SOUL.md` and `config.yaml` views
+- added per-agent cron controls and backend-backed gateway status/log/actions
+- added a `Maintenance` section for update and cleanup operations
+- added a real persisted Kanban board under `Projects`
+- fixed the `Agents` crash caused by referencing the selected profile before initialization
+
 ## Screenshots
 
 <p align="center">
@@ -47,11 +70,6 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the project-to-date writeup.
 <p align="center">
   <img src="screenshots/2026-04-15_12-00-46-6.jpg" width="48%" />
   <img src="screenshots/2026-04-15_12-01-07.jpg" width="48%" />
-</p>
-
-<p align="center">
-  <img src="screenshots/ss1.jpg" width="48%" />
-  <img src="screenshots/ss2.jpg" width="48%" />
 </p>
 
 ## Repository Layout
@@ -174,3 +192,9 @@ This project is actively evolving. A few areas still need more hardening:
 ## Credits
 
 Built on top of Hermes Web UI and Hermes Agent, with substantial local redesign and operator-focused dashboard work layered on top.
+
+Additional credit and inspiration:
+
+- [`xaspx/hermes-control-interface`](https://github.com/xaspx/hermes-control-interface) for a strong operational control surface and useful parity reference points
+- [`NousResearch`](https://x.com/NousResearch) for Hermes and the broader ecosystem around it
+- [`Teknium`](https://x.com/Teknium) for the Hermes work and product direction that made this dashboard worth extending
