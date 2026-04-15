@@ -138,10 +138,6 @@ The backend includes route aliasing so these can be requested from frontend asse
 
 ## Security Notes
 
-- This public repository does not include a real `.env`
-- No private runtime password or machine-local auth token is intentionally included
-- Some tests contain fake credentials to verify redaction behavior; those values are test fixtures, not live secrets
-
 If you adapt this for deployment:
 
 - keep `.env` local
