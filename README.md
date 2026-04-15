@@ -37,6 +37,23 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the project-to-date writeup.
 - Reports with `1H`, `24H`, `7D`, and `30D` windows
 - Profile browser for `SOUL.md`, `config.yaml`, and related profile files
 
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/2026-04-15_12-00-33.jpg" width="48%" />
+  <img src="screenshots/2026-04-15_12-00-46-5.jpg" width="48%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/2026-04-15_12-00-46-6.jpg" width="48%" />
+  <img src="screenshots/2026-04-15_12-01-07.jpg" width="48%" />
+</p>
+
+<p align="center">
+  <img src="screenshots/ss1.jpg" width="48%" />
+  <img src="screenshots/ss2.jpg" width="48%" />
+</p>
+
 ## Repository Layout
 
 - `server.py`
