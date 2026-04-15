@@ -189,6 +189,12 @@ This project is actively evolving. A few areas still need more hardening:
 - cleaner packaging between the legacy UI and the React redesign
 - broader test coverage for the newer dashboard workflows
 
+## Future TODOs
+
+- add a pluggable memory-provider layer so Hermes native memory remains the baseline while external systems can be integrated cleanly
+- add adapter support for Honcho and other memory systems
+- add merged memory reporting with per-provider attribution, growth trends, retrieval quality, and source visibility
+
 ## Credits
 
 Built on top of Hermes Web UI and Hermes Agent, with substantial local redesign and operator-focused dashboard work layered on top.
