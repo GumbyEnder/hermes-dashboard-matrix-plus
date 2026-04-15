@@ -216,26 +216,63 @@ def switch_profile(name: str) -> dict:
 
 def list_profiles_api() -> list:
     """List all profiles with metadata, serialized for JSON response."""
+    active = _active_profile
     try:
         from hermes_cli.profiles import list_profiles
         infos = list_profiles()
     except ImportError:
-        # hermes_cli not available -- return just the default
-        return [_default_profile_dict()]
+        infos = None
 
-    active = _active_profile
-    result = []
-    for p in infos:
+    if infos is not None:
+        result = []
+        for p in infos:
+            result.append({
+                'name': p.name,
+                'path': str(p.path),
+                'is_default': p.is_default,
+                'is_active': p.name == active,
+                'gateway_running': p.gateway_running,
+                'model': p.model,
+                'provider': p.provider,
+                'has_env': p.has_env,
+                'skill_count': p.skill_count,
+            })
+        return result
+
+    result = [_default_profile_dict()]
+    profiles_dir = _DEFAULT_HERMES_HOME / 'profiles'
+    if not profiles_dir.is_dir():
+        return result
+
+    for profile_dir in sorted(p for p in profiles_dir.iterdir() if p.is_dir()):
+        name = profile_dir.name
+        if name == 'default':
+            continue
+        config = {}
+        config_path = profile_dir / 'config.yaml'
+        if config_path.exists():
+            try:
+                import yaml
+                loaded = yaml.safe_load(config_path.read_text(encoding='utf-8'))
+                if isinstance(loaded, dict):
+                    config = loaded
+            except Exception:
+                config = {}
+        model_cfg = config.get('model') if isinstance(config, dict) else None
+        model = model_cfg if isinstance(model_cfg, str) else (model_cfg or {}).get('default')
+        provider = config.get('provider') if isinstance(config, dict) else None
+        skills_dir = profile_dir / 'skills'
+        skill_count = len([p for p in skills_dir.iterdir() if p.is_dir()]) if skills_dir.is_dir() else 0
         result.append({
-            'name': p.name,
-            'path': str(p.path),
-            'is_default': p.is_default,
-            'is_active': p.name == active,
-            'gateway_running': p.gateway_running,
-            'model': p.model,
-            'provider': p.provider,
-            'has_env': p.has_env,
-            'skill_count': p.skill_count,
+            'name': name,
+            'path': str(profile_dir),
+            'is_default': False,
+            'is_active': name == active,
+            'gateway_running': False,
+            'model': model,
+            'provider': provider,
+            'has_env': (profile_dir / '.env').exists(),
+            'skill_count': skill_count,
         })
     return result
 
